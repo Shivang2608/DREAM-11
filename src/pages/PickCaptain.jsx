@@ -1,117 +1,117 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
-function PickCaptain() {
-  const location = useLocation();
+const PickCaptain = () => {
+  const { id: matchId } = useParams();
   const navigate = useNavigate();
-  const { matchId } = useParams();
+  const { state } = useLocation();
 
-  // ... All your state and logic is perfect, no changes ...
-  const [selectedPlayers, setSelectedPlayers] = useState(
-    location.state?.selectedPlayers || []
-  );
-  const [captainId, setCaptainId] = useState(null);
-  const [viceCaptainId, setViceCaptainId] = useState(null);
+  const selectedPlayers = state?.selectedPlayers || [];
+  const editTeamIndex = state?.editTeamIndex ?? null;
+
+  const [captain, setCaptain] = useState(null);
+  const [viceCaptain, setViceCaptain] = useState(null);
+
+  useEffect(() => {
+    if (!selectedPlayers || selectedPlayers.length !== 11) {
+      // If user directly comes to this page without selection
+      alert("Please select 11 players first.");
+      navigate(`/match/${matchId}/pick-players`);
+    }
+  }, [selectedPlayers, matchId, navigate]);
 
   const handleSaveTeam = () => {
-    if (!captainId || !viceCaptainId) {
-      alert('Please select a Captain and a Vice-Captain.');
+    if (!captain || !viceCaptain) {
+      alert("Please choose both Captain and Vice Captain.");
       return;
     }
-    const finalTeam = {
-      id: new Date().getTime(), matchId: matchId, players: selectedPlayers,
-      captain: captainId, viceCaptain: viceCaptainId,
+    if (captain === viceCaptain) {
+      alert("Captain and Vice-Captain cannot be the same player.");
+      return;
+    }
+
+    const newTeam = {
+      players: selectedPlayers,
+      captain,
+      viceCaptain,
+      createdAt: new Date().toISOString(),
     };
-    const teamsKey = `my_teams_${matchId}`;
-    const savedTeams = JSON.parse(localStorage.getItem(teamsKey)) || [];
-    const newSavedTeams = [...savedTeams, finalTeam];
-    localStorage.setItem(teamsKey, JSON.stringify(newSavedTeams));
+
+    const storageKey = `teams_${matchId}`;
+    const existingTeams = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    if (editTeamIndex !== null && existingTeams[editTeamIndex]) {
+      // update existing team
+      existingTeams[editTeamIndex] = newTeam;
+    } else {
+      // add new team
+      existingTeams.push(newTeam);
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify(existingTeams));
+
+    alert("Team saved successfully!");
 
     navigate(`/match/${matchId}/my-teams`);
   };
 
-  const handleSelectCaptain = (playerId) => {
-    if (playerId === viceCaptainId) setViceCaptainId(null); 
-    setCaptainId(playerId);
-  };
-
-  const handleSelectViceCaptain = (playerId) => {
-    if (playerId === captainId) setCaptainId(null); 
-    setViceCaptainId(playerId);
-  };
-
   return (
-    <div>
-      {/* --- Sticky Crimson Header --- */}
-      <div className="sticky top-0 z-10 bg-crimson p-3 text-white shadow-lg">
-        <h1 className="text-xl font-bold text-center">Pick Captain & Vice-Captain</h1>
-        <p className="text-center text-red-100 text-sm mt-1">
-          Captain (C) gets 2x points, Vice-Captain (VC) gets 1.5x points.
-        </p>
-        
-        {/* --- Save Button (White on Crimson) --- */}
-        <div className="mt-3">
-          <button 
-            className="w-full bg-white text-crimson font-bold py-3 rounded-lg hover:bg-gray-200 transition-all disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed"
-            onClick={handleSaveTeam}
-            disabled={!captainId || !viceCaptainId}
-          >
-            Save Team
-          </button>
-        </div>
-      </div>
+    <div className="bg-crimson min-h-screen p-5">
+      <h1 className="text-3xl font-bold text-white text-center mb-6 pb-2 border-b-4 border-white">
+        Select Captain & Vice Captain
+      </h1>
 
-      {/* --- Player List --- */}
-      <div className="p-2">
-        <div className="flex justify-between p-2 bg-dark-card text-xs font-bold text-gray-400">
-          <p>PLAYER</p>
-          <p>SELECT C & VC</p>
+      <div className="max-w-3xl mx-auto bg-dark-card border border-dark-border rounded-lg p-5">
+        <h2 className="text-xl text-white font-semibold text-center mb-4">
+          Choose wisely! Captain = 2x points, Vice Captain = 1.5x points
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {selectedPlayers.map((player) => (
+            <div
+              key={player.id}
+              className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+            >
+              <h3 className="text-white font-bold">{player.name}</h3>
+              <p className="text-sm text-gray-300">{player.role} • {player.team}</p>
+              <p className="text-sm text-gray-400">{player.credits} credits</p>
+
+              <div className="mt-3 flex items-center justify-between">
+                {/* Captain Selection */}
+                <label className="flex items-center gap-2 text-white text-sm">
+                  <input
+                    type="radio"
+                    name="captain"
+                    checked={captain === player.id}
+                    onChange={() => setCaptain(player.id)}
+                  />
+                  Captain
+                </label>
+
+                {/* Vice Captain Selection */}
+                <label className="flex items-center gap-2 text-white text-sm">
+                  <input
+                    type="radio"
+                    name="viceCaptain"
+                    checked={viceCaptain === player.id}
+                    onChange={() => setViceCaptain(player.id)}
+                  />
+                  Vice-Captain
+                </label>
+              </div>
+            </div>
+          ))}
         </div>
-        
-        {selectedPlayers.map((player) => (
-          <div
-            key={player.id}
-            className="flex items-center justify-between p-3 border-b border-dark-border"
-          >
-            <div>
-              <h4 className="font-semibold text-white">{player.name}</h4>
-              <p className="text-sm text-gray-400">
-                {player.team_name} - {player.role}
-              </p>
-            </div>
-            
-            {/* C/VC Buttons with Crimson accent */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleSelectCaptain(player.id)}
-                className={`w-10 h-10 rounded-full font-bold
-                  ${captainId === player.id 
-                    ? 'bg-crimson text-white' // Active C
-                    : 'bg-dark-card text-white'}
-                  ${viceCaptainId === player.id ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
-                disabled={viceCaptainId === player.id}
-              >
-                C
-              </button>
-              <button
-                onClick={() => handleSelectViceCaptain(player.id)}
-                className={`w-10 h-10 rounded-full font-bold
-                  ${viceCaptainId === player.id 
-                    ? 'bg-gray-700 text-white' // Active VC
-                    : 'bg-dark-card text-white'}
-                  ${captainId === player.id ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
-                disabled={captainId === player.id}
-              >
-                VC
-              </button>
-            </div>
-          </div>
-        ))}
+
+        <button
+          onClick={handleSaveTeam}
+          className="mt-6 w-full py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200"
+        >
+          Confirm & Save Team
+        </button>
       </div>
     </div>
   );
-}
+};
 
 export default PickCaptain;
