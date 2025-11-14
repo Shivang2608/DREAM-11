@@ -1,0 +1,45 @@
+/* This is your new UpcomingPage.css file */
+
+/* This class will be on your main <div> 
+It will act as the "page" background.
+*/
+.upcoming-container {
+    background-color: crimson;
+    color: white; /* This sets the text color for everything inside */
+    
+    /* Make it take up the full screen */
+    min-height: 100vh; 
+    width: 100%;
+    
+    /* Just for spacing */
+    padding: 30px;
+    box-sizing: border-box; /* Ensures padding doesn't break layout */
+}
+
+/* This makes sure ALL text inside is white, as requested */
+.upcoming-container h1,
+.upcoming-container p,
+.upcoming-container span {
+    color: white;
+}
+
+/* This is your button style */
+.team-button {
+    background-color: crimson;
+    color: white;
+    
+    /* This makes it "well rounded" */
+    border-radius: 50px; 
+    
+    /* The white border so you can see it */
+    border: 2px solid white; 
+    
+    padding: 12px 25px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.team-button:hover {
+    background-color: white;
+    color: crimson;
+}

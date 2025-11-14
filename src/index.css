@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  /* Set the "outside" background to pure black */
+  background-color: crimson;
+  color:white;
+  font-size: 2rem;
+}
